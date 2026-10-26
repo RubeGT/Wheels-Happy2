@@ -8,6 +8,15 @@ const supabaseConfig = {
   supabaseAnonKey: "anon-test-key",
   supabaseServiceRoleKey: "service-test-key"
 };
+
+function getGameUserId(userId) {
+  let hash = 2166136261;
+  for (const character of userId) {
+    hash = Math.imul(hash ^ character.charCodeAt(0), 16777619);
+  }
+  return (hash >>> 0) % 2_147_483_646 + 1;
+}
+
 let server;
 let baseUrl;
 let forwardedRequest;
@@ -439,6 +448,7 @@ test("serves custom game records and adds published levels to the game catalog",
       }
       return Response.json([{
         id: Number(customId),
+        author_id: "author-1",
         author_name: "LevelMaker",
         title: "Custom ride",
         user_comment: "Have fun",
@@ -455,7 +465,9 @@ test("serves custom game records and adds published levels to the game catalog",
       body: new URLSearchParams({ action: "get_featured" })
     });
     assert.equal(catalog.status, 200);
-    assert.match(await catalog.text(), /id="1900000000" ln="Custom ride"/);
+    const catalogXml = await catalog.text();
+    assert.match(catalogXml, /id="1900000000" ln="Custom ride"/);
+    assert.match(catalogXml, new RegExp(`ui="${getGameUserId("author-1")}"`));
 
     const recordResponse = await fetch(`${customServer.root}/get_level.hw`, {
       method: "POST",

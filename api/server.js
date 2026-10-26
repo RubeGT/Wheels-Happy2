@@ -72,6 +72,14 @@ function getBearerToken(request) {
   return match?.[1] || null;
 }
 
+function getGameUserId(userId) {
+  let hash = 2166136261;
+  for (const character of userId) {
+    hash = Math.imul(hash ^ character.charCodeAt(0), 16777619);
+  }
+  return (hash >>> 0) % 2_147_483_646 + 1;
+}
+
 function isValidLevelXml(value) {
   return (
     typeof value === "string" &&
@@ -180,7 +188,7 @@ export function createServer({
 
   async function getPublishedLevelXml() {
     const params = new URLSearchParams({
-      select: "id,author_name,title,user_comment,playable_character,published_at",
+      select: "id,author_id,author_name,title,user_comment,playable_character,published_at",
       published: "eq.true",
       order: "published_at.desc",
       limit: String(LEVEL_LIST_LIMIT)
@@ -193,7 +201,7 @@ export function createServer({
     if (!Array.isArray(body) || body.length === 0) return "";
     const records = body.map((level) => {
       const publishDate = new Date(level.published_at || Date.now()).toISOString().slice(0, 10);
-      return `<lv id="${xmlAttribute(level.id)}" ln="${xmlAttribute(level.title)}" pc="${xmlAttribute(level.playable_character)}" ps="0" rg="0" ui="1900000000" un="${xmlAttribute(level.author_name)}" vs="0" df="${publishDate}" dp="${publishDate}"><uc>${xmlCdata(level.user_comment)}</uc></lv>`;
+      return `<lv id="${xmlAttribute(level.id)}" ln="${xmlAttribute(level.title)}" pc="${xmlAttribute(level.playable_character)}" ps="0" rg="0" ui="${getGameUserId(level.author_id)}" un="${xmlAttribute(level.author_name)}" vs="0" df="${publishDate}" dp="${publishDate}"><uc>${xmlCdata(level.user_comment)}</uc></lv>`;
     });
     return records.join("");
   }
