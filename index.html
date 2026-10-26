@@ -22,6 +22,9 @@
       <button id="signup-open" class="button button-primary" type="button">Sign up</button>
       <button id="logout" class="button button-quiet" type="button" hidden>Log out</button>
     </div>
+    <nav class="site-nav" aria-label="Main navigation">
+      <a class="selected" href="#play">Play</a>
+    </nav>
   </header>
 
   <main>
@@ -33,7 +36,7 @@
       <p class="intro-copy">Sign in to rate levels, save replays, and publish your creations from the in-game level editor.</p>
     </section>
 
-    <section class="game-section" aria-label="Happy Wheels game">
+    <section id="play" class="game-section" aria-label="Happy Wheels game">
       <div class="game-frame">
         <iframe src="game.html" title="Happy Wheels game" allow="fullscreen; autoplay" allowfullscreen></iframe>
       </div>
