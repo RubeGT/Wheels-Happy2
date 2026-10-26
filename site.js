@@ -1,11 +1,43 @@
 const API_BASE = document.documentElement.dataset.apiBase.replace(/\/+$/, "");
 const TOKEN_KEY = "wheelsHappyAccessToken";
+const GAME_USER_ID_KEY = "wheelsHappyGameUserId";
+const GAME_USERNAME_KEY = "wheelsHappyGameUsername";
 const accountDialog = document.querySelector("#account-dialog");
 const accountForm = document.querySelector("#account-form");
 let accountMode = "login";
 
 function getToken() {
   return localStorage.getItem(TOKEN_KEY);
+}
+
+function getGameUserId(userId) {
+  let hash = 2166136261;
+  for (const character of userId) {
+    hash = Math.imul(hash ^ character.charCodeAt(0), 16777619);
+  }
+  return (hash >>> 0) % 2_147_483_646 + 1;
+}
+
+function syncGameSession(user) {
+  const userId = user?.id ? String(getGameUserId(user.id)) : null;
+  const username =
+    user?.user_metadata?.username ||
+    user?.email?.split("@")[0] ||
+    "";
+  const previousUserId = localStorage.getItem(GAME_USER_ID_KEY);
+  const previousUsername = localStorage.getItem(GAME_USERNAME_KEY);
+
+  if (userId) {
+    localStorage.setItem(GAME_USER_ID_KEY, userId);
+    localStorage.setItem(GAME_USERNAME_KEY, username);
+  } else {
+    localStorage.removeItem(GAME_USER_ID_KEY);
+    localStorage.removeItem(GAME_USERNAME_KEY);
+  }
+
+  if (previousUserId !== userId || previousUsername !== (userId ? username : null)) {
+    document.querySelector(".game-frame iframe").contentWindow.location.reload();
+  }
 }
 
 function setMessage(element, message, success = false) {
@@ -84,6 +116,7 @@ accountForm.addEventListener("submit", async (event) => {
       return;
     }
     localStorage.setItem(TOKEN_KEY, result.access_token);
+    syncGameSession(result.user);
     accountDialog.close();
     accountForm.reset();
     updateAccountUi(result.user);
@@ -106,6 +139,7 @@ document.querySelector("#logout").addEventListener("click", async () => {
     console.warn("Could not end the remote session:", error);
   } finally {
     localStorage.removeItem(TOKEN_KEY);
+    syncGameSession(null);
     updateAccountUi(null);
   }
 });
@@ -115,9 +149,11 @@ async function restoreSession() {
   if (!token) return;
   try {
     const user = await api("/api/auth/me");
+    syncGameSession(user);
     updateAccountUi(user);
   } catch {
     localStorage.removeItem(TOKEN_KEY);
+    syncGameSession(null);
     updateAccountUi(null);
   }
 }
