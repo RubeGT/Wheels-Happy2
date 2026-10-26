@@ -4,7 +4,31 @@ const GAME_USER_ID_KEY = "wheelsHappyGameUserId";
 const GAME_USERNAME_KEY = "wheelsHappyGameUsername";
 const accountDialog = document.querySelector("#account-dialog");
 const accountForm = document.querySelector("#account-form");
+const gameFrame = document.querySelector(".game-frame");
+const fullscreenButton = document.querySelector("#fullscreen-game");
 let accountMode = "login";
+
+function updateFullscreenButton() {
+  fullscreenButton.textContent = document.fullscreenElement === gameFrame ? "Exit fullscreen" : "Fullscreen";
+}
+
+fullscreenButton.addEventListener("click", async () => {
+  try {
+    if (document.fullscreenElement === gameFrame) {
+      await document.exitFullscreen();
+    } else if (gameFrame.requestFullscreen) {
+      await gameFrame.requestFullscreen();
+    } else {
+      throw new Error("Fullscreen isn't supported by this browser.");
+    }
+  } catch (error) {
+    const caption = document.querySelector(".game-caption p");
+    caption.textContent = error.message || "Could not enter fullscreen.";
+    caption.setAttribute("role", "status");
+  }
+});
+
+document.addEventListener("fullscreenchange", updateFullscreenButton);
 
 function getToken() {
   return localStorage.getItem(TOKEN_KEY);
