@@ -90460,8 +90460,7 @@
                     wordWrapWidth: 67
                 }).setTransform(7, 482);
                 this[a.name = "versionText"] = a;
-                var o = (new i.iosButton).setTransform(37.75, 352.9);
-                this[o.name = "appLink"] = o, this.addChild(t, n, a, o)
+                this.addChild(t, n, a)
             })), i.sliderTab_copy = s.extend((function() {
                 s.call(this);
                 var t = new a(o("game-ui-81")).setTransform(-8, -8, .25, .25);
