@@ -6,7 +6,6 @@
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   --blue: #4eb0e8;
-  --blue-deep: #286a9f;
   --paper: #efefef;
   --ink: #333;
   --muted: #888;
@@ -187,7 +186,7 @@ main {
 }
 
 h1, h2, h3 { margin: 0; }
-h1, .section-heading h2 {
+h1 {
   color: var(--pink);
   font-family: Georgia, "Times New Roman", serif;
   font-weight: bold;
@@ -217,27 +216,9 @@ h1 span { color: #605344; }
 }
 .status-dot { width: 7px; height: 7px; border-radius: 50%; background: #4f9d66; }
 
-.levels-section { padding: 38px 0 15px; }
-.section-heading {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  margin-bottom: 13px;
-  padding: 0 0 9px;
-  border-bottom: 4px solid #dbdad8;
-}
-.section-heading h2 { font-size: 24px; line-height: 1.1; }
-.levels-status { margin: 0; color: #888; font-size: 13px; }
-.levels-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
-.level-card { min-width: 0; padding: 13px; border: 1px solid #ddd; border-top: 3px solid #dbdad8; background: #fff; }
-.level-card h3 { margin: 0 0 7px; color: #605344; font-size: 15px; overflow-wrap: anywhere; }
-.level-card p { margin: 0 0 10px; color: #888; font-size: 12px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
-.level-meta { display: flex; justify-content: space-between; gap: 8px; color: #999; font-size: 11px; }
-.level-download { color: var(--blue-deep); font-size: 11px; font-weight: bold; text-decoration: none; }
-.level-download:hover { text-decoration: underline; }
-
 .site-footer {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: 12px;
   padding: 13px 10px 25px;
@@ -283,8 +264,6 @@ h1 span { color: #605344; }
   .intro { display: block; }
   .intro-copy { max-width: 400px; margin-top: 9px; font-size: 12px; }
   .game-section { margin-top: 14px; }
-  .levels-section { padding-top: 30px; }
-  .levels-list { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 390px) {

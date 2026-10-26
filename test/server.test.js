@@ -316,7 +316,7 @@ test("updates and publishes only owned custom levels", async () => {
   }
 });
 
-test("stores ratings and replay saves under the authenticated account", async () => {
+test("stores level ratings under the authenticated account", async () => {
   const requests = [];
   const accountServer = await startServer({
     ...supabaseConfig,
@@ -325,7 +325,6 @@ test("stores ratings and replay saves under the authenticated account", async ()
       if (url.pathname === "/auth/v1/user") {
         return Response.json({ id: "authenticated-user", email: "player@example.com" });
       }
-      if (url.pathname === "/rest/v1/replays") return Response.json([{ id: 1800000000 }]);
       return new Response(null, { status: 201 });
     }
   });
@@ -349,29 +348,67 @@ test("stores ratings and replay saves under the authenticated account", async ()
       level_id: "12345",
       rating: 4
     });
-
-    const replayResponse = await fetch(requestUrl, {
-      method: "POST",
-      headers,
-      body: new URLSearchParams({
-        action: "create",
-        rr: encodeURIComponent(Buffer.from("replay-data").toString("base64")),
-        em: encodeURIComponent(Buffer.from("encrypted-meta").toString("base64")),
-        ei: encodeURIComponent(Buffer.from("iv").toString("base64"))
-      })
-    });
-    assert.equal(replayResponse.status, 200);
-    assert.equal(await replayResponse.text(), "success:1800000000");
-    assert.equal(requests[3].url.pathname, "/rest/v1/replays");
-    assert.deepEqual(JSON.parse(requests[3].options.body), {
-      author_id: "authenticated-user",
-      level_id: null,
-      replay_record: Buffer.from("replay-data").toString("base64"),
-      encrypted_meta: Buffer.from("encrypted-meta").toString("base64"),
-      encryption_iv: Buffer.from("iv").toString("base64")
-    });
   } finally {
     await accountServer.close();
+  }
+});
+
+test("proxies native game replay saves without requiring account storage", async () => {
+  let forwardedRequest;
+  const replayServer = await startServer({
+    ...supabaseConfig,
+    fetchImpl: async (url, options) => {
+      forwardedRequest = { url: url.href, body: options.body.toString() };
+      return new Response("native-replay-response", { status: 200 });
+    },
+    supabaseFetchImpl: async () => {
+      throw new Error("Native replays must not call Supabase");
+    }
+  });
+
+  try {
+    const body = new URLSearchParams({
+      action: "create",
+      rr: encodeURIComponent(Buffer.from("replay-data").toString("base64")),
+      em: encodeURIComponent(Buffer.from("encrypted-meta").toString("base64")),
+      ei: encodeURIComponent(Buffer.from("iv").toString("base64"))
+    });
+    const response = await fetch(`${replayServer.root}/get_level.hw`, {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body
+    });
+    assert.equal(response.status, 200);
+    assert.equal(await response.text(), "native-replay-response");
+    assert.equal(forwardedRequest.url, "https://totaljerkface.com/get_level.hw");
+    assert.equal(forwardedRequest.body, body.toString());
+  } finally {
+    await replayServer.close();
+  }
+});
+
+test("serves upstream catalogs when the optional Supabase catalog lookup fails", async () => {
+  const upstreamCatalog = "<lvs><lv id=\"123\" /></lvs>";
+  const catalogServer = await startServer({
+    ...supabaseConfig,
+    fetchImpl: async () =>
+      new Response(upstreamCatalog, {
+        status: 200,
+        headers: { "content-type": "application/xml" }
+      }),
+    supabaseFetchImpl: async () => Response.json({ message: "Database unavailable" }, { status: 503 })
+  });
+
+  try {
+    const response = await fetch(`${catalogServer.root}/get_level.hw`, {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ action: "get_featured" })
+    });
+    assert.equal(response.status, 200);
+    assert.equal(await response.text(), upstreamCatalog);
+  } finally {
+    await catalogServer.close();
   }
 });
 
