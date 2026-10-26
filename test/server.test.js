@@ -12,6 +12,12 @@ before(async () => {
     allowedOrigins: new Set([allowedOrigin]),
     fetchImpl: async (url, options) => {
       forwardedRequest = { url: url.href, options };
+      if (new URLSearchParams(options.body.toString()).get("action") === "get_record") {
+        return new Response(Uint8Array.from([0, 255, 128, 65]), {
+          status: 200,
+          headers: { "content-type": "application/octet-stream" }
+        });
+      }
       return new Response("<lvs><lv id=\"123\" /></lvs>", {
         status: 200,
         headers: { "content-type": "application/xml" }
@@ -49,6 +55,22 @@ test("proxies level requests and returns CORS headers", async () => {
   assert.match(await response.text(), /<lv id="123"/);
   assert.equal(forwardedRequest.url, "https://totaljerkface.com/get_level.hw");
   assert.equal(forwardedRequest.options.body.toString(), "action=get_level&level_id=123");
+});
+
+test("preserves binary playable-level data", async () => {
+  const response = await fetch(`${baseUrl}/get_level.hw`, {
+    method: "POST",
+    headers: {
+      origin: allowedOrigin,
+      "content-type": "application/x-www-form-urlencoded"
+    },
+    body: "action=get_record&level_id=10037145&ip_tracking=12345678"
+  });
+
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("content-type"), "application/octet-stream");
+  assert.deepEqual([...new Uint8Array(await response.arrayBuffer())], [0, 255, 128, 65]);
+  assert.equal(forwardedRequest.options.body.toString(), "action=get_record&level_id=10037145&ip_tracking=12345678");
 });
 
 test("rejects unapproved origins", async () => {

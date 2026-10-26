@@ -2,7 +2,7 @@
 
 Browser-based Happy Wheels game. The entry point is `index.html`; scripts and assets are served from this repository.
 
-The game is published at <https://rubegt.github.io/Wheels-Happy2/> using GitHub Pages from the `main` branch. This repository includes a Node.js API proxy for the game's level, replay, and user requests because Totaljerkface rejects those browser requests from the GitHub Pages origin.
+The game is published at <https://rubegt.github.io/Wheels-Happy2/> using GitHub Pages from the `main` branch. This repository includes a Node.js API proxy for the game's level, replay, and user requests because Totaljerkface rejects those browser requests from the GitHub Pages origin. It forwards both XML level listings and binary playable-level data unchanged.
 
 ## Deploying the API
 
