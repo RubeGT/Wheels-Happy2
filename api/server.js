@@ -11,7 +11,6 @@ const UPSTREAM_ORIGIN = "https://totaljerkface.com/";
 const ALLOWED_ROUTES = new Set(["/get_level.hw", "/replay.hw", "/user.hw"]);
 const MAX_BODY_SIZE = 13 * 1024 * 1024;
 const MAX_LEVEL_XML_LENGTH = 512 * 1024;
-const MAX_REPLAY_RECORD_LENGTH = 3 * 1024 * 1024;
 const LEVEL_LIST_LIMIT = 100;
 const CUSTOM_LEVEL_ID_MIN = 1_900_000_000;
 
@@ -387,63 +386,6 @@ export function createServer({
     return true;
   }
 
-  async function saveGameReplay(request, form, response) {
-    if (!supabaseConfigured) {
-      response.writeHead(503, { "content-type": "text/plain; charset=utf-8" });
-      response.end("failure:account_service_unavailable");
-      return true;
-    }
-    const auth = await getAuthenticatedUser(request);
-    if (auth.error) {
-      response.writeHead(401, { "content-type": "text/plain; charset=utf-8" });
-      response.end("failure:not_logged_in");
-      return true;
-    }
-    const replayRecord = decodeEncodedBase64(form.get("rr"));
-    const encryptedMeta = decodeEncodedBase64(form.get("em"));
-    const encryptionIv = decodeEncodedBase64(form.get("ei"));
-    const levelId = form.get("level_id");
-    if (
-      !replayRecord ||
-      replayRecord.length === 0 ||
-      replayRecord.length > MAX_REPLAY_RECORD_LENGTH ||
-      !encryptedMeta ||
-      encryptedMeta.length === 0 ||
-      encryptedMeta.length > 8192 ||
-      !encryptionIv ||
-      encryptionIv.length === 0 ||
-      encryptionIv.length > 256 ||
-      (levelId !== null &&
-        (!/^\d+$/.test(levelId) || BigInt(levelId) > BigInt(2_147_483_647)))
-    ) {
-      response.writeHead(400, { "content-type": "text/plain; charset=utf-8" });
-      response.end("failure:bad_param");
-      return true;
-    }
-    const { response: saveResponse, body } = await callSupabase("/rest/v1/replays?select=id", {
-      method: "POST",
-      apiKey: supabaseServiceRoleKey,
-      headers: {
-        authorization: `Bearer ${supabaseServiceRoleKey}`,
-        "content-type": "application/json",
-        prefer: "return=representation"
-      },
-      body: JSON.stringify({
-        author_id: auth.user.id,
-        level_id: levelId || null,
-        replay_record: replayRecord.toString("base64"),
-        encrypted_meta: encryptedMeta.toString("base64"),
-        encryption_iv: encryptionIv.toString("base64")
-      })
-    });
-    if (!saveResponse.ok) sendSupabaseError(response, saveResponse.status, body);
-    else {
-      response.writeHead(200, { "content-type": "text/plain; charset=utf-8" });
-      response.end(`success:${body?.[0]?.id}`);
-    }
-    return true;
-  }
-
   async function handleApiRequest(request, response, requestUrl) {
     const path = requestUrl.pathname;
     const isAuthRoute = path.startsWith("/api/auth/");
@@ -685,9 +627,6 @@ export function createServer({
       ) {
         if (await saveGameLevel(request, form, action, response)) return;
       }
-      if (action === "create" && (form.has("rr") || form.has("em") || form.has("ei"))) {
-        if (await saveGameReplay(request, form, response)) return;
-      }
       if (action === "get_record" && /^\d+$/.test(form.get("level_id") || "")) {
         const levelId = form.get("level_id");
         if (BigInt(levelId) >= BigInt(CUSTOM_LEVEL_ID_MIN)) {
@@ -751,16 +690,20 @@ export function createServer({
         ["get_all", "get_featured", "get_cmb_by_user", "get_pub_by_user", "search_by_name", "search_by_user"].includes(upstreamAction) &&
         supabaseConfigured
       ) {
-        const customLevels = await getPublishedLevelXml();
-        if (customLevels.length > 0) {
-          const xml = responseBody.toString("utf8");
-          const closingTag = xml.lastIndexOf("</lvs>");
-          if (closingTag !== -1) {
-            responseBody = Buffer.from(
-              `${xml.slice(0, closingTag)}${customLevels}${xml.slice(closingTag)}`,
-              "utf8"
-            );
+        try {
+          const customLevels = await getPublishedLevelXml();
+          if (customLevels.length > 0) {
+            const xml = responseBody.toString("utf8");
+            const closingTag = xml.lastIndexOf("</lvs>");
+            if (closingTag !== -1) {
+              responseBody = Buffer.from(
+                `${xml.slice(0, closingTag)}${customLevels}${xml.slice(closingTag)}`,
+                "utf8"
+              );
+            }
           }
+        } catch (error) {
+          console.error("Could not add custom levels to the upstream catalog:", error);
         }
       }
 
