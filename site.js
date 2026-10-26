@@ -155,7 +155,12 @@ accountForm.addEventListener("submit", async (event) => {
     accountForm.reset();
     updateAccountUi(result.user);
   } catch (error) {
-    setMessage(message, error.message);
+    setMessage(
+      message,
+      error.message === "Account and level publishing are not configured yet"
+        ? "Accounts aren't connected yet. The site needs Supabase set up before sign-up can work."
+        : error.message
+    );
   } finally {
     submit.disabled = false;
   }
