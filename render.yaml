@@ -9,3 +9,11 @@ services:
     envVars:
       - key: ALLOWED_ORIGINS
         value: https://rubegt.github.io
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_AUTH_REDIRECT_URL
+        value: https://rubegt.github.io/Wheels-Happy2/
