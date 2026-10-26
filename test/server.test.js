@@ -112,6 +112,45 @@ test("falls back to the public featured catalog when browsing requires login", a
   }
 });
 
+test("falls back to featured levels when anonymous get_all returns an empty body", async () => {
+  const forwardedActions = [];
+  const fallbackServer = createServer({
+    allowedOrigins: new Set([allowedOrigin]),
+    fetchImpl: async (_url, options) => {
+      const action = new URLSearchParams(options.body.toString()).get("action");
+      forwardedActions.push(action);
+      if (action === "get_all") {
+        return new Response(null, { status: 200 });
+      }
+      return new Response("<lvs><lv id=\"1786343\" /></lvs>", {
+        status: 200,
+        headers: { "content-type": "application/xml" }
+      });
+    }
+  });
+  await new Promise((resolve) => fallbackServer.listen(0, "127.0.0.1", resolve));
+
+  try {
+    const response = await fetch(`http://127.0.0.1:${fallbackServer.address().port}/get_level.hw`, {
+      method: "POST",
+      headers: {
+        origin: allowedOrigin,
+        "content-type": "application/x-www-form-urlencoded"
+      },
+      body: "action=get_all&currentPage=1&sortby=newest&uploaded=anytime"
+    });
+
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get("content-type"), "application/xml");
+    assert.match(await response.text(), /<lv id="1786343"/);
+    assert.deepEqual(forwardedActions, ["get_all", "get_featured"]);
+  } finally {
+    await new Promise((resolve, reject) => {
+      fallbackServer.close((error) => (error ? reject(error) : resolve()));
+    });
+  }
+});
+
 test("rejects unapproved origins", async () => {
   const response = await fetch(`${baseUrl}/get_level.hw`, {
     method: "POST",

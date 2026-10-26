@@ -117,11 +117,13 @@ export function createServer({
       };
       let upstreamResponse = await fetchImpl(upstreamUrl, upstreamRequest);
       let responseBody = Buffer.from(await upstreamResponse.arrayBuffer());
+      const action = new URLSearchParams(body.toString()).get("action");
 
       if (
         requestUrl.pathname === "/get_level.hw" &&
-        new URLSearchParams(body.toString()).get("action") === "get_cmb_by_user" &&
-        responseBody.toString("utf8").startsWith("failure:not_logged_in")
+        ((action === "get_cmb_by_user" &&
+          responseBody.toString("utf8").startsWith("failure:not_logged_in")) ||
+          (action === "get_all" && responseBody.length === 0))
       ) {
         const fallbackBody = new URLSearchParams(body.toString());
         fallbackBody.set("action", "get_featured");
