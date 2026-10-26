@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: wheels-happy2-api
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /healthz
+    envVars:
+      - key: ALLOWED_ORIGINS
+        value: https://rubegt.github.io
