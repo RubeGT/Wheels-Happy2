@@ -1,87 +1,86 @@
-<html>
+<!doctype html>
+<html lang="en" data-api-base="https://wheels-happy2-api.onrender.com">
 <head>
-<title>Happy Wheels HTML5 - Levan Kipshidze</title>
-    <meta http-equiv="content-type" content="text/html; charset=UTF8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
-
-    <style>
-        body {
-            overflow: hidden;
-            background-color: black;
-        }
-        /* width */
-        ::-webkit-scrollbar {
-            width: 10px;
-        }
-
-        /* Track */
-        ::-webkit-scrollbar-track {
-            background: ¦666666; 
-        }
-        
-        /* Handle */
-        ::-webkit-scrollbar-thumb {
-            background: ¦CCCCCC; 
-        }
-
-        /* Handle on hover */
-        ::-webkit-scrollbar-thumb:hover {
-            background: ¦CCCCCC; 
-        }
-
-        /* stupid firefox */
-        html {scrollbar-color: ¦CCCCCC ¦666666; scrollbar-width: thin; background-color: black;}
-    </style>
-
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f6f8">
+  <meta name="description" content="Play Happy Wheels and share your own custom levels.">
+  <title>Happy Wheels - Play &amp; Share</title>
+  <link rel="stylesheet" href="site.css">
+  <script src="site.js" defer></script>
 </head>
-<body oncontextmenu="return false;">
-    <script>
-        function report_loading_issue() {
-            var el = document.createElement("img");
-            el.src = "/DEBUG2/wrong-ref.png?wl=" + window.location + "&wpl=" + window.parent.location + "&wlh=" + window.location.host + "&wplh=" + window.parent.location.host;
-            el.style.position = "absolute";
-            el.style.left = "-9999px";
-            el.style.top = "-9999px";
-            document.body.appendChild(el);
-        }
-		const pathToMyURL = 'https://wheels-happy2-api.onrender.com/get_level.hw';
-		
-
-        (function() {
-            window["HW_SETTINGS"] = {
-                siteURL: "https://wheels-happy2-api.onrender.com/",
-                resolution: 2,
-                resolutionFullscreen: 2,
-                resolutionZoomIncreaseRatio: 0.5
-            };
-            if(!(window.location != window.parent.location && window.location.host === "totaljerkface.com" && window.parent.location.host === "totaljerkface.com")) {
-            }
-
-
-            var d_el = document.createElement("script");
-			
-            d_el.src = "js/dependencies.ac8072eb8a22557c1b4828699b35bec7.js";
-            d_el.onload = function() {
-                var i_el = document.createElement("script");
-                i_el.src = "js/index.js";
-                // i_el.integrity = "sha384-GKAptyGydgK2fCaxFPGnAip+60TiYdFsB22A5ax8TB2dqT8ockqX1XI1rsr6fJIH";
-                i_el.onload = function() {
-                    document.getElementById("loading-indicator").remove();
-                }
-
-                document.body.appendChild(i_el);
-            }
-            document.body.appendChild(d_el);
-        })();
-    </script>
-
-    <div id="og-game-holder">
-        <p style="color:white" id="loading-indicator">Loading...</p>
+<body>
+  <header class="site-header">
+    <a class="brand" href="./" aria-label="Happy Wheels home">
+      <span class="brand-mark" aria-hidden="true">HW</span>
+      <span>HAPPY WHEELS</span>
+    </a>
+    <div class="header-actions">
+      <button id="replays-open" class="button button-quiet" type="button" hidden>Saved replays</button>
+      <span id="account-name" class="account-name" hidden></span>
+      <button id="login-open" class="button button-quiet" type="button">Log in</button>
+      <button id="signup-open" class="button button-primary" type="button">Sign up</button>
+      <button id="logout" class="button button-quiet" type="button" hidden>Log out</button>
     </div>
-	
-		
+  </header>
+
+  <main>
+    <section class="intro">
+      <div>
+        <p class="eyebrow">THE CLASSIC CHAOS, IN YOUR BROWSER</p>
+        <h1>Pick a ride.<br><span>Make a mess.</span></h1>
+      </div>
+      <p class="intro-copy">Sign in to rate levels, save replays, and publish your creations from the in-game level editor.</p>
+    </section>
+
+    <section class="game-section" aria-label="Happy Wheels game">
+      <div class="game-frame">
+        <iframe src="game.html" title="Happy Wheels game" allow="fullscreen; autoplay" allowfullscreen></iframe>
+      </div>
+      <p class="game-caption"><span class="status-dot"></span> Game runs right here — no app download needed.</p>
+    </section>
+
+    <section id="account-tools" class="levels-section" aria-labelledby="levels-heading" hidden>
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">YOUR ACCOUNT</p>
+          <h2 id="levels-heading">Saved replays</h2>
+        </div>
+        <button id="refresh-replays" class="button button-quiet" type="button">Refresh</button>
+      </div>
+      <p id="replays-status" class="levels-status" role="status">Sign in to view your saved replays.</p>
+      <div id="replays-list" class="levels-list"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span>Happy Wheels fan project</span>
+    <a href="game.html">Open game by itself</a>
+  </footer>
+
+  <dialog id="account-dialog" class="dialog">
+    <form id="account-form" class="dialog-card">
+      <button class="dialog-close" type="button" aria-label="Close">&times;</button>
+      <p class="eyebrow" id="account-eyebrow">YOUR PLAYER ACCOUNT</p>
+      <h2 id="account-title">Welcome back</h2>
+      <p class="dialog-copy" id="account-copy">Log in to rate levels, save replays, and publish from the game editor.</p>
+      <label id="username-field" class="form-field" hidden>
+        <span>Username</span>
+        <input name="username" type="text" minlength="3" maxlength="24" autocomplete="username" pattern="[A-Za-z0-9_-]{3,24}" placeholder="YourPlayerName">
+      </label>
+      <label class="form-field">
+        <span>Email</span>
+        <input name="email" type="email" autocomplete="email" required maxlength="254" placeholder="you@example.com">
+      </label>
+      <label class="form-field">
+        <span>Password</span>
+        <input name="password" type="password" autocomplete="current-password" required minlength="8" maxlength="128" placeholder="At least 8 characters">
+      </label>
+      <p id="account-message" class="form-message" role="status"></p>
+      <button id="account-submit" class="button button-primary button-wide" type="submit">Log in</button>
+      <button id="account-switch" class="text-button" type="button">Need an account? Sign up</button>
+    </form>
+  </dialog>
+
 </body>
 </html>
