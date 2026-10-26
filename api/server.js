@@ -109,13 +109,29 @@ export function createServer({
 
     try {
       const upstreamUrl = new URL(requestUrl.pathname.slice(1), upstreamOrigin);
-      const upstreamResponse = await fetchImpl(upstreamUrl, {
+      const upstreamRequest = {
         method: "POST",
         headers: { "content-type": contentType },
         body,
         signal: AbortSignal.timeout(20_000)
-      });
-      const responseBody = Buffer.from(await upstreamResponse.arrayBuffer());
+      };
+      let upstreamResponse = await fetchImpl(upstreamUrl, upstreamRequest);
+      let responseBody = Buffer.from(await upstreamResponse.arrayBuffer());
+
+      if (
+        requestUrl.pathname === "/get_level.hw" &&
+        new URLSearchParams(body.toString()).get("action") === "get_cmb_by_user" &&
+        responseBody.toString("utf8").startsWith("failure:not_logged_in")
+      ) {
+        const fallbackBody = new URLSearchParams(body.toString());
+        fallbackBody.set("action", "get_featured");
+        upstreamResponse = await fetchImpl(upstreamUrl, {
+          ...upstreamRequest,
+          body: Buffer.from(fallbackBody.toString())
+        });
+        responseBody = Buffer.from(await upstreamResponse.arrayBuffer());
+      }
+
       response.writeHead(upstreamResponse.status, {
         "content-type": upstreamResponse.headers.get("content-type") || "application/xml; charset=utf-8",
         "cache-control": "no-store"

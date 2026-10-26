@@ -73,6 +73,45 @@ test("preserves binary playable-level data", async () => {
   assert.equal(forwardedRequest.options.body.toString(), "action=get_record&level_id=10037145&ip_tracking=12345678");
 });
 
+test("falls back to the public featured catalog when browsing requires login", async () => {
+  const forwardedActions = [];
+  const fallbackServer = createServer({
+    allowedOrigins: new Set([allowedOrigin]),
+    fetchImpl: async (_url, options) => {
+      const action = new URLSearchParams(options.body.toString()).get("action");
+      forwardedActions.push(action);
+      if (action === "get_cmb_by_user") {
+        return new Response("failure:not_logged_in");
+      }
+      return new Response("<lvs><lv id=\"1786343\" /></lvs>", {
+        status: 200,
+        headers: { "content-type": "application/xml" }
+      });
+    }
+  });
+  await new Promise((resolve) => fallbackServer.listen(0, "127.0.0.1", resolve));
+
+  try {
+    const response = await fetch(`http://127.0.0.1:${fallbackServer.address().port}/get_level.hw`, {
+      method: "POST",
+      headers: {
+        origin: allowedOrigin,
+        "content-type": "application/x-www-form-urlencoded"
+      },
+      body: "action=get_cmb_by_user&user=everyone"
+    });
+
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get("content-type"), "application/xml");
+    assert.match(await response.text(), /<lv id="1786343"/);
+    assert.deepEqual(forwardedActions, ["get_cmb_by_user", "get_featured"]);
+  } finally {
+    await new Promise((resolve, reject) => {
+      fallbackServer.close((error) => (error ? reject(error) : resolve()));
+    });
+  }
+});
+
 test("rejects unapproved origins", async () => {
   const response = await fetch(`${baseUrl}/get_level.hw`, {
     method: "POST",
