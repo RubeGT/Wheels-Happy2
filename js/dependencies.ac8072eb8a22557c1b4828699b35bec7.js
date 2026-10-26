@@ -90414,28 +90414,6 @@
                     leading: 2
                 }).setAlign("center").setTransform(3.1000000000000014, -7.1, 1, 1, .349);
                 this.addChild(t, n)
-            })), i.google_play_button = s.extend((function() {
-                s.call(this);
-                var t = new a(o("game-ui-6")).setTransform(-1, 0, .25, .25);
-                this.addChild(t)
-            })), i.app_button = s.extend((function() {
-                s.call(this);
-                var t = new a(o("game-ui-7")).setTransform(-1, 0, .25, .25);
-                this.addChild(t)
-            })), i.ios_icon = s.extend((function() {
-                s.call(this);
-                var t = new a(o("game-ui-4")).setTransform(-299, -295, 1.65, 1.65);
-                this.addChild(t)
-            })), i.iosButton = s.extend((function() {
-                s.call(this);
-                var t = (new i.ios_icon).setTransform(44.4, 64.95, .151, .151);
-                this[t.name = "head"] = t;
-                var n = (new i.app_button).setTransform(98.25, 69.3);
-                this[n.name = "appButton"] = n;
-                var a = (new i.google_play_button).setTransform(98.25, 20.55);
-                this[a.name = "googlePlayAppButton"] = a;
-                var o = (new i.mc_featured_button_new_star_1).setTransform(234.25, 19.9);
-                this.addChild(t, n, a, o)
             })), i.mc_logo = s.extend((function() {
                 s.call(this);
                 var t = new a(o("game-ui-asset-6")).setTransform(-118, -52, .25, .25);
