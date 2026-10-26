@@ -80,6 +80,16 @@
                 resolutionZoomIncreaseRatio: 0.5,
                 tesselation: "tess2"
             };
+            try {
+                var gameUserId = window.localStorage.getItem("wheelsHappyGameUserId");
+                if (gameUserId && /^\d+$/.test(gameUserId)) {
+                    window["HW_SETTINGS"].user_id = Number(gameUserId);
+                    window["HW_SETTINGS"].username =
+                        window.localStorage.getItem("wheelsHappyGameUsername") || "Player";
+                }
+            } catch (error) {
+                console.error("Could not read the game account profile:", error);
+            }
             if(!(window.location != window.parent.location && window.location.host === "totaljerkface.com" && window.parent.location.host === "totaljerkface.com")) {
             }
 
